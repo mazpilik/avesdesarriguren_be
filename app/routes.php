@@ -10,6 +10,8 @@ use Slim\App;
 use Slim\Interfaces\RouteCollectorProxyInterface as Group;
 use Slim\Exception\HttpNotFoundException;
 
+CONST JWT_SECRET = '!secRet$1234';
+
 return function (App $app) {
     $app->options('/{routes:.+}', function ($request, $response, $args) {
         return $response;
@@ -33,6 +35,138 @@ return function (App $app) {
         $group->get('/{id}', ViewUserAction::class);
     });
 
+    $app->group('/orders', function (Group $group) {
+        
+        /**
+         * get all orders
+         */
+        $group->get('/all', function (Request $request, Response $response) {
+            $db = $this->get(PDO::class);
+            $sth = $db->prepare('SELECT * FROM orders');
+            $sth->execute();
+            $orders = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+            $response->getBody()->write(json_encode($orders));
+            return $response->withHeader('Content-Type', 'application/json');
+        });
+
+        /**
+         * get order paginated
+         */
+        $group->get('/sorted/{page}/{limit}/{orderby}/{direction}', function (Request $request, Response $response) {
+            $page = $request->getAttribute('page');
+            $limit = $request->getAttribute('limit');
+            $orderby = $request->getAttribute('orderby') === 'date' ? 'id' : 'name';
+            $direction = $request->getAttribute('direction');
+
+            $db = $this->get(PDO::class);
+            $sth = $db->prepare('SELECT * FROM orders ORDER BY '.$orderby.' '.$direction.' LIMIT '.$limit.' OFFSET '.($page-1)*$limit);
+            $sth->execute();
+            $orders = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+            $response->getBody()->write(json_encode($orders));
+            return $response->withHeader('Content-Type', 'application/json');
+        });
+
+        /**
+         * get count of orders
+         */
+        $group->get('/number', function (Request $request, Response $response) {
+            $db = $this->get(PDO::class);
+            $sth = $db->prepare('SELECT COUNT(*) FROM orders');
+            $sth->execute();
+            $number = $sth->fetchColumn();
+
+            $response->getBody()->write(json_encode($number));
+            return $response->withHeader('Content-Type', 'application/json');
+        });
+
+        /**
+         * get order by id
+         */
+        $group->get('/{id}', function (Request $request, Response $response) {
+            $id = $request->getAttribute('id');
+            $db = $this->get(PDO::class);
+            $sth = $db->prepare('SELECT * FROM orders WHERE id = :id');
+            $sth->bindParam('id', $id);
+            $sth->execute();
+            $order = $sth->fetch(PDO::FETCH_ASSOC);
+
+            $response->getBody()->write(json_encode($order));
+            return $response->withHeader('Content-Type', 'application/json');
+        });
+
+        /**
+         * update order
+         */
+        $group->post('/{id}', function (Request $request, Response $response) {
+            try {
+                $request_body = $request->getParsedBody();
+                $id = $request->getAttribute('id');
+                $name = $request_body['name'];
+                $db = $this->get(PDO::class);
+                $sth = $db->prepare('UPDATE orders SET name = :name WHERE id = :id');
+                $sth->bindParam('id', $id);
+                $sth->bindParam('name', $name);
+                $sth->execute();
+
+                $response->getBody()->write(json_encode($request_body));
+                return $response->withHeader('Content-Type', 'application/json');
+            } catch (PDOException $e) {
+                $response->getBody()->write(json_encode($e->getMessage()));
+                return $response->withHeader('Content-Type', 'application/json');
+            }
+        })->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));;
+
+        /**
+         * create order
+         */
+        $group->post('',function (Request $request, Response $response) {
+            $db = $this->get(PDO::class);
+        
+            // get name from request body
+            $request_body = $request->getParsedBody();
+
+            try {
+                // insert name to orders table and return id
+                $sth = $db->prepare('INSERT INTO orders (name) VALUES (:name)');
+                $sth->bindParam('name', $request_body['name']);
+                $sth->execute();
+                $response->getBody()->write(json_encode('CREATE_SUCCESS'));
+                return $response->withHeader('Content-Type', 'application/json');
+            } catch (PDOException $e) {
+                // get error status code
+                $status = $e->getCode();
+                if($status == 23000) {
+                    $response->getBody()->write(json_encode('CREATE_ERROR_DUPLICATED'));
+                    return $response->withHeader('Content-Type', 'application/json');
+                }
+                // devolver error
+                $response->getBody()->write(json_encode('CREATE_ERROR'));
+                return $response->withStatus(500);
+            }
+        })->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+
+        /**
+         * delete order
+         */
+        $group->delete('/{id}', function (Request $request, Response $response) {
+            try {
+                $id = $request->getAttribute('id');
+                $db = $this->get(PDO::class);
+                $sth = $db->prepare('DELETE FROM orders WHERE id = :id');
+                $sth->bindParam('id', $id);
+                $sth->execute();
+    
+                $response->getBody()->write(json_encode('DELETE_SUCCESS'));
+                return $response->withHeader('Content-Type', 'application/json');
+            } catch (PDOException $e) {
+                $response-getBody()->write(json_encode('DELETE_ERROR'));
+                return $response->withStatus(500);
+            }
+        })->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+    });
+
     $app->post('/login', function (Request $request, Response $response) {
         //get the user from the request
         $raw_user = $request->getParsedBody();
@@ -52,7 +186,7 @@ return function (App $app) {
                 $factory = new \PsrJwt\Factory\Jwt();
                 $builder = $factory->builder();
 
-                $token = $builder->setSecret('!secRet$1234')
+                $token = $builder->setSecret(JWT_SECRET)
                     ->setPayloadClaim('uid', $user[0]['id'])
                     ->build();
 
