@@ -35,10 +35,13 @@ return function (App $app) {
         $group->get('/{id}', ViewUserAction::class);
     });
 
+    /**
+     * orders routes
+     */
     $app->group('/orders', function (Group $group) {
         
         /**
-         * get all orders
+         * get all orders without pagination
          */
         $group->get('/all', function (Request $request, Response $response) {
             $db = $this->get(PDO::class);
@@ -51,16 +54,40 @@ return function (App $app) {
         });
 
         /**
-         * get order paginated
+         * sort orders by id or by name and paginated
+         * 
+         * @param int $page
+         * @param int $limit
+         * @param string $orderBy
+         * @param string $direction
+         * @param string $where
+         * @return Response
          */
-        $group->get('/sorted/{page}/{limit}/{orderby}/{direction}', function (Request $request, Response $response) {
+        $group->get('/sorted/{page}/{limit}/{orderby}/{direction}[/{where}]', function (Request $request, Response $response) {
             $page = $request->getAttribute('page');
             $limit = $request->getAttribute('limit');
             $orderby = $request->getAttribute('orderby') === 'date' ? 'id' : 'name';
             $direction = $request->getAttribute('direction');
+            $where = $request->getAttribute('where');
+
+            $where_condition = '';
+            $where_value = '';
+            $offset = ($page - 1) * $limit;
+
+            if($where !== 'EMPTY_WHERE') {
+                $where_value = "%$where%";
+                $where_condition = ' WHERE name LIKE :name';
+            }
 
             $db = $this->get(PDO::class);
-            $sth = $db->prepare('SELECT * FROM orders ORDER BY '.$orderby.' '.$direction.' LIMIT '.$limit.' OFFSET '.($page-1)*$limit);
+            $sth = $db->prepare('SELECT * FROM orders'.$where_condition.' ORDER BY :orderBy :direction LIMIT :limit OFFSET :offset');
+            $sth->bindParam(':orderBy', $orderby, PDO::PARAM_STR);
+            $sth->bindParam(':direction', $direction, PDO::PARAM_STR);
+            $sth->bindParam(':limit', $limit, PDO::PARAM_INT);
+            $sth->bindParam(':offset', $offset, PDO::PARAM_INT);
+            if($where !== 'EMPTY_WHERE') {
+                $sth->bindParam(':name', $where_value, PDO::PARAM_STR);
+            }
             $sth->execute();
             $orders = $sth->fetchAll(PDO::FETCH_ASSOC);
 
@@ -71,9 +98,23 @@ return function (App $app) {
         /**
          * get count of orders
          */
-        $group->get('/number', function (Request $request, Response $response) {
+        $group->get('/number[/{where}]', function (Request $request, Response $response) {
+            $where = $request->getAttribute('where');
+            $where_condition = '';
+
             $db = $this->get(PDO::class);
-            $sth = $db->prepare('SELECT COUNT(*) FROM orders');
+
+            if(!empty($where)){
+                $where_value = "%$where%";
+                $where_condition = ' WHERE name LIKE :name';
+            }
+
+            $sth = $db->prepare('SELECT COUNT(*) FROM orders'.$where_condition);
+            
+            if(!empty($where)){
+                $sth->bindParam(':name', $where_value, PDO::PARAM_STR);
+            }
+            
             $sth->execute();
             $number = $sth->fetchColumn();
 
@@ -83,6 +124,9 @@ return function (App $app) {
 
         /**
          * get order by id
+         * 
+         * @param int $id
+         * @return Response
          */
         $group->get('/{id}', function (Request $request, Response $response) {
             $id = $request->getAttribute('id');
@@ -98,6 +142,9 @@ return function (App $app) {
 
         /**
          * update order
+         * 
+         * @param int $id
+         * @return Response
          */
         $group->post('/{id}', function (Request $request, Response $response) {
             try {
@@ -149,6 +196,9 @@ return function (App $app) {
 
         /**
          * delete order
+         * 
+         * @param int $id
+         * @return Response
          */
         $group->delete('/{id}', function (Request $request, Response $response) {
             try {
@@ -165,6 +215,20 @@ return function (App $app) {
                 return $response->withStatus(500);
             }
         })->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+
+        // find order by name like
+        $group->get('/find/{name}', function (Request $request, Response $response) {
+            $name = $request->getAttribute('name');
+            $wildCard = '%'.$name.'%';
+            $db = $this->get(PDO::class);
+            $sth = $db->prepare('SELECT * FROM orders WHERE name LIKE :name');
+            $sth->bindParam('name', $wildCard);
+            $sth->execute();
+            $orders = $sth->fetchAll(PDO::FETCH_ASSOC);
+
+            $response->getBody()->write(json_encode($orders));
+            return $response->withHeader('Content-Type', 'application/json');
+        });
     });
 
     $app->post('/login', function (Request $request, Response $response) {
