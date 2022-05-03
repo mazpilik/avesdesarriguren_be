@@ -2,8 +2,24 @@
 
 declare(strict_types=1);
 
+use App\Application\Actions\Family\CreateFamilyAction;
+use App\Application\Actions\Family\FamilyDeleteAction;
+use App\Application\Actions\Family\FindFamilyByIdAction;
+use App\Application\Actions\Family\GetFamilyCountAction;
+use App\Application\Actions\Family\ListAllFamilyAction;
+use App\Application\Actions\Family\ListFamilySortedAction;
+use App\Application\Actions\Family\UpdateFamilyAction;
+use App\Application\Actions\Order\CreateOrderAction;
+use App\Application\Actions\Order\FindOrderByIdAction;
+use App\Application\Actions\Order\GetOrdersCountAction;
+use App\Application\Actions\Order\ListAllOrdersAction;
+use App\Application\Actions\Order\ListOrdersSortedAction;
+use App\Application\Actions\Order\OrderDeleteAction;
+use App\Application\Actions\Order\UpdateOrderAction;
 use App\Application\Actions\User\ListUsersAction;
 use App\Application\Actions\User\ViewUserAction;
+
+
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
@@ -39,196 +55,41 @@ return function (App $app) {
      * orders routes
      */
     $app->group('/orders', function (Group $group) {
+
+        $group->get('/all', ListAllOrdersAction::class);
+
+        $group->get('/sorted/{page}/{limit}/{orderby}/{direction}[/{where}]', ListOrdersSortedAction::class);
+
+        $group->get('/number[/{where}]', GetOrdersCountAction::class);
+
+        $group->get('/{id}', FindOrderByIdAction::class);
+
+        $group->post('', CreateOrderAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+
+        $group->post('/{id}', UpdateOrderAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));;
+
+        $group->delete('/{id}', OrderDeleteAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+
+    });
+
+    /**
+     * family routes
+     */
+    $app->group('/family', function (Group $group) {
         
-        /**
-         * get all orders without pagination
-         */
-        $group->get('/all', function (Request $request, Response $response) {
-            $db = $this->get(PDO::class);
-            $sth = $db->prepare('SELECT * FROM orders');
-            $sth->execute();
-            $orders = $sth->fetchAll(PDO::FETCH_ASSOC);
+        $group->get('/all', ListAllFamilyAction::class);
 
-            $response->getBody()->write(json_encode($orders));
-            return $response->withHeader('Content-Type', 'application/json');
-        });
+        $group->get('/sorted/{page}/{limit}/{orderby}/{direction}[/{where}]', ListFamilySortedAction::class);
 
-        /**
-         * sort orders by id or by name and paginated
-         * 
-         * @param int $page
-         * @param int $limit
-         * @param string $orderBy
-         * @param string $direction
-         * @param string $where
-         * @return Response
-         */
-        $group->get('/sorted/{page}/{limit}/{orderby}/{direction}[/{where}]', function (Request $request, Response $response) {
-            $page = $request->getAttribute('page');
-            $limit = $request->getAttribute('limit');
-            $orderby = $request->getAttribute('orderby') === 'date' ? 'id' : 'name';
-            $direction = $request->getAttribute('direction');
-            $where = $request->getAttribute('where');
+        $group->get('/number[/{where}]', GetFamilyCountAction::class);
 
-            $where_condition = '';
-            $where_value = '';
-            $offset = ($page - 1) * $limit;
+        $group->get('/{id}', FindFamilyByIdAction::class);
 
-            if($where !== 'EMPTY_WHERE') {
-                $where_value = "%$where%";
-                $where_condition = ' WHERE name LIKE :name';
-            }
+        $group->post('', CreateFamilyAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
 
-            $db = $this->get(PDO::class);
-            $sth = $db->prepare('SELECT * FROM orders'.$where_condition.' ORDER BY :orderBy :direction LIMIT :limit OFFSET :offset');
-            $sth->bindParam(':orderBy', $orderby, PDO::PARAM_STR);
-            $sth->bindParam(':direction', $direction, PDO::PARAM_STR);
-            $sth->bindParam(':limit', $limit, PDO::PARAM_INT);
-            $sth->bindParam(':offset', $offset, PDO::PARAM_INT);
-            if($where !== 'EMPTY_WHERE') {
-                $sth->bindParam(':name', $where_value, PDO::PARAM_STR);
-            }
-            $sth->execute();
-            $orders = $sth->fetchAll(PDO::FETCH_ASSOC);
+        $group->post('/{id}', UpdateFamilyAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));;
 
-            $response->getBody()->write(json_encode($orders));
-            return $response->withHeader('Content-Type', 'application/json');
-        });
-
-        /**
-         * get count of orders
-         */
-        $group->get('/number[/{where}]', function (Request $request, Response $response) {
-            $where = $request->getAttribute('where');
-            $where_condition = '';
-
-            $db = $this->get(PDO::class);
-
-            if(!empty($where)){
-                $where_value = "%$where%";
-                $where_condition = ' WHERE name LIKE :name';
-            }
-
-            $sth = $db->prepare('SELECT COUNT(*) FROM orders'.$where_condition);
-            
-            if(!empty($where)){
-                $sth->bindParam(':name', $where_value, PDO::PARAM_STR);
-            }
-            
-            $sth->execute();
-            $number = $sth->fetchColumn();
-
-            $response->getBody()->write(json_encode($number));
-            return $response->withHeader('Content-Type', 'application/json');
-        });
-
-        /**
-         * get order by id
-         * 
-         * @param int $id
-         * @return Response
-         */
-        $group->get('/{id}', function (Request $request, Response $response) {
-            $id = $request->getAttribute('id');
-            $db = $this->get(PDO::class);
-            $sth = $db->prepare('SELECT * FROM orders WHERE id = :id');
-            $sth->bindParam('id', $id);
-            $sth->execute();
-            $order = $sth->fetch(PDO::FETCH_ASSOC);
-
-            $response->getBody()->write(json_encode($order));
-            return $response->withHeader('Content-Type', 'application/json');
-        });
-
-        /**
-         * update order
-         * 
-         * @param int $id
-         * @return Response
-         */
-        $group->post('/{id}', function (Request $request, Response $response) {
-            try {
-                $request_body = $request->getParsedBody();
-                $id = $request->getAttribute('id');
-                $name = $request_body['name'];
-                $db = $this->get(PDO::class);
-                $sth = $db->prepare('UPDATE orders SET name = :name WHERE id = :id');
-                $sth->bindParam('id', $id);
-                $sth->bindParam('name', $name);
-                $sth->execute();
-
-                $response->getBody()->write(json_encode($request_body));
-                return $response->withHeader('Content-Type', 'application/json');
-            } catch (PDOException $e) {
-                $response->getBody()->write(json_encode($e->getMessage()));
-                return $response->withHeader('Content-Type', 'application/json');
-            }
-        })->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));;
-
-        /**
-         * create order
-         */
-        $group->post('',function (Request $request, Response $response) {
-            $db = $this->get(PDO::class);
-        
-            // get name from request body
-            $request_body = $request->getParsedBody();
-
-            try {
-                // insert name to orders table and return id
-                $sth = $db->prepare('INSERT INTO orders (name) VALUES (:name)');
-                $sth->bindParam('name', $request_body['name']);
-                $sth->execute();
-                $response->getBody()->write(json_encode('CREATE_SUCCESS'));
-                return $response->withHeader('Content-Type', 'application/json');
-            } catch (PDOException $e) {
-                // get error status code
-                $status = $e->getCode();
-                if($status == 23000) {
-                    $response->getBody()->write(json_encode('CREATE_ERROR_DUPLICATED'));
-                    return $response->withHeader('Content-Type', 'application/json');
-                }
-                // devolver error
-                $response->getBody()->write(json_encode('CREATE_ERROR'));
-                return $response->withStatus(500);
-            }
-        })->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
-
-        /**
-         * delete order
-         * 
-         * @param int $id
-         * @return Response
-         */
-        $group->delete('/{id}', function (Request $request, Response $response) {
-            try {
-                $id = $request->getAttribute('id');
-                $db = $this->get(PDO::class);
-                $sth = $db->prepare('DELETE FROM orders WHERE id = :id');
-                $sth->bindParam('id', $id);
-                $sth->execute();
-    
-                $response->getBody()->write(json_encode('DELETE_SUCCESS'));
-                return $response->withHeader('Content-Type', 'application/json');
-            } catch (PDOException $e) {
-                $response-getBody()->write(json_encode('DELETE_ERROR'));
-                return $response->withStatus(500);
-            }
-        })->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
-
-        // find order by name like
-        $group->get('/find/{name}', function (Request $request, Response $response) {
-            $name = $request->getAttribute('name');
-            $wildCard = '%'.$name.'%';
-            $db = $this->get(PDO::class);
-            $sth = $db->prepare('SELECT * FROM orders WHERE name LIKE :name');
-            $sth->bindParam('name', $wildCard);
-            $sth->execute();
-            $orders = $sth->fetchAll(PDO::FETCH_ASSOC);
-
-            $response->getBody()->write(json_encode($orders));
-            return $response->withHeader('Content-Type', 'application/json');
-        });
+        $group->delete('/{id}', FamilyDeleteAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
     });
 
     $app->post('/login', function (Request $request, Response $response) {
