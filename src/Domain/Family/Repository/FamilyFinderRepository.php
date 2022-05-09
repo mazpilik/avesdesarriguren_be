@@ -104,4 +104,29 @@ final class FamilyFinderRepository
             return ['FIND_FAIL'];
         }
     }
+
+    /**
+     * get family by order id
+     * 
+     * @param int $orderId
+     * @return array $families
+     * @throws \Throwable
+     * 
+     * */
+    public function findByOrderId(int $orderId): array
+    {
+        try {
+            $sth = $this->db->prepare('SELECT family.id, family.name, family.order_id as orderId, orders.name as orderName FROM family JOIN orders ON (family.order_id = orders.id) WHERE family.order_id = :orderId');
+            $sth->bindParam(':orderId', $orderId);
+            $sth->execute();
+            $families = $sth->fetchAll(PDO::FETCH_ASSOC);
+            if($families){
+                return $families;
+            } else {
+                return ['NOT_FOUND'];
+            }
+        } catch (PDOException $e) {
+            return ['FIND_FAIL'];
+        }
+    }
 }

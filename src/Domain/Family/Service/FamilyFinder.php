@@ -32,4 +32,9 @@ final class FamilyFinder
     {
         return $this->familyFinderRepository->getFamilyCount($where);
     }
+
+    public function findByOrderId(int $orderId): array
+    {
+        return $this->familyFinderRepository->findByOrderId($orderId);
+    }
 }
