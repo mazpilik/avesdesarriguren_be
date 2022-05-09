@@ -2,8 +2,12 @@
 
 declare(strict_types=1);
 
+use App\Application\Actions\Bird\CreateBirdAction;
+use App\Application\Actions\Bird\FindBirdsSortedAction;
+use App\Application\Actions\Bird\GetBirdsCountAction;
 use App\Application\Actions\Family\CreateFamilyAction;
 use App\Application\Actions\Family\FamilyDeleteAction;
+use App\Application\Actions\Family\FindFamiliesByOrderId;
 use App\Application\Actions\Family\FindFamilyByIdAction;
 use App\Application\Actions\Family\GetFamilyCountAction;
 use App\Application\Actions\Family\ListAllFamilyAction;
@@ -18,6 +22,7 @@ use App\Application\Actions\Order\OrderDeleteAction;
 use App\Application\Actions\Order\UpdateOrderAction;
 use App\Application\Actions\User\ListUsersAction;
 use App\Application\Actions\User\ViewUserAction;
+use App\Application\Actions\ShFileUpload\ShFileUploadAction;
 
 
 use Psr\Http\Message\ResponseInterface as Response;
@@ -85,12 +90,28 @@ return function (App $app) {
 
         $group->get('/{id}', FindFamilyByIdAction::class);
 
+        $group->get('/order/{orderId}', FindFamiliesByOrderId::class);
+
         $group->post('', CreateFamilyAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
 
         $group->post('/{id}', UpdateFamilyAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));;
 
         $group->delete('/{id}', FamilyDeleteAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
     });
+
+    // bird routes
+    $app->group('/birds', function (Group $group) {
+        // $group->get('/all', ListAllBirdsAction::class);
+        $group->get('/sorted/{lang}/{page}/{limit}/{orderby}/{direction}[/{where}]', FindBirdsSortedAction::class);
+        $group->get('/number/{lang}[/{where}]', GetBirdsCountAction::class);
+        // $group->get('/{id}', FindBirdByIdAction::class);
+        $group->post('', CreateBirdAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+        // $group->post('/{id}', UpdateBirdAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+        // $group->delete('/{id}', BirdDeleteAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+    });
+
+    // image upload
+    $app->post('/fileupload', ShFileUploadAction::class);
 
     $app->post('/login', function (Request $request, Response $response) {
         //get the user from the request
