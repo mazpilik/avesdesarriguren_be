@@ -25,7 +25,6 @@ final class CreateBirdAction
 
           $bird_id = $this->birdCreator->create($data);
 
-        //   $response->getBody()->write(json_encode('SUCCESS_FAMILY_CREATION'));
           $response->getBody()->write($bird_id);
 
           return $response->withHeader('Content-Type', 'application/json');

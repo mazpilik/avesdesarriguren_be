@@ -36,7 +36,7 @@ final class BirdAditionalData
         $this->feeding = $bird_data['feeding'];
         $this->reproduction = $bird_data['reproduction'];
         $this->population = $bird_data['population'];
-        $this->conservation_threat = $bird_data['conservationThreat'];
+        $this->conservation_threat = $bird_data['conservationThreats'];
         $this->world_distribution = $bird_data['worldDistribution'];
         $this->peninsula_distribution = $bird_data['peninsulaDistribution'];
     }

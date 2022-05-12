@@ -73,6 +73,18 @@ final class BirdCreator
             $this->birdCreatorRepository->presenceMonths($presence_months_bird);
         }
 
-        return "SUCCESS_BIRD_CREATION";
+        return $bird_id;
+    }
+
+    // bind image to bird
+    public function bindImage(int $bird_id, string $filename): void
+    {
+        $this->birdCreatorRepository->bindImage($bird_id, $filename);
+    }
+
+    // check if bird exists
+    public function checkBirdExists(int $bird_id): bool
+    {
+        return $this->birdCreatorRepository->checkBirdExists($bird_id);
     }
 }

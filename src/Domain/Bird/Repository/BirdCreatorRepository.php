@@ -64,4 +64,38 @@ final class BirdCreatorRepository
             $stmt->execute($row);
         }
     }
+
+    /**
+     * bind img and bird in bird_image table
+     * 
+     * @param img_name
+     * @param bird_id
+     * @return void
+     * @throws \Exception
+     * 
+     * */
+    public function bindImage(int $bird_id, string $img_name): void
+    {
+        $sql = "INSERT INTO bird_img (bird_id, img) VALUES (:bird_id, :img)";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':bird_id', $bird_id, PDO::PARAM_INT);
+        $stmt->bindParam(':img', $img_name, PDO::PARAM_STR);
+        $stmt->execute();
+    }
+
+    /**
+     * check if bird exists
+     * 
+     * @param bird_id
+     * @return bool
+     * @throws \Exception
+     */
+    public function checkBirdExists(int $bird_id): bool
+    {
+        $sql = "SELECT * FROM bird WHERE id = :bird_id";
+        $stmt = $this->pdo->prepare($sql);
+        $stmt->bindValue(':bird_id', $bird_id, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->rowCount() > 0;
+    }
 }
