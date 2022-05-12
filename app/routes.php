@@ -110,8 +110,8 @@ return function (App $app) {
         // $group->delete('/{id}', BirdDeleteAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
     });
 
-    // image upload
-    $app->post('/fileupload', ShFileUploadAction::class);
+    // birds images upload
+    $app->post('/fileupload/bird/{birdId}', ShFileUploadAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
 
     $app->post('/login', function (Request $request, Response $response) {
         //get the user from the request
