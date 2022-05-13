@@ -5,10 +5,12 @@ declare(strict_types=1);
 use App\Application\Actions\Bird\CreateBirdAction;
 use App\Application\Actions\Bird\FindBirdsSortedAction;
 use App\Application\Actions\Bird\GetBirdsCountAction;
+use App\Application\Actions\Bird\UpdateBirdAction;
 use App\Application\Actions\Family\CreateFamilyAction;
 use App\Application\Actions\Family\FamilyDeleteAction;
 use App\Application\Actions\Family\FindFamiliesByOrderId;
 use App\Application\Actions\Family\FindFamilyByIdAction;
+use App\Application\Actions\Bird\FindBirdByIdAction;
 use App\Application\Actions\Family\GetFamilyCountAction;
 use App\Application\Actions\Family\ListAllFamilyAction;
 use App\Application\Actions\Family\ListFamilySortedAction;
@@ -104,9 +106,9 @@ return function (App $app) {
         // $group->get('/all', ListAllBirdsAction::class);
         $group->get('/sorted/{lang}/{page}/{limit}/{orderby}/{direction}[/{where}]', FindBirdsSortedAction::class);
         $group->get('/number/{lang}[/{where}]', GetBirdsCountAction::class);
-        // $group->get('/{id}', FindBirdByIdAction::class);
+        $group->get('/{id}', FindBirdByIdAction::class);
         $group->post('', CreateBirdAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
-        // $group->post('/{id}', UpdateBirdAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+        $group->post('/{id}', UpdateBirdAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
         // $group->delete('/{id}', BirdDeleteAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
     });
 
