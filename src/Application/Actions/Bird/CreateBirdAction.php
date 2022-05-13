@@ -32,8 +32,8 @@ final class CreateBirdAction
       } catch (\Throwable $th) {
           // get status code
           $status_code = $th->getCode();
-        //   $error_message = 'ERROR_CREATE';
-          $error_message = $th->getMessage();
+          $error_message = 'ERROR_CREATE';
+        //   $error_message = $th->getMessage();
           if($status_code == 23000){
               $error_message = 'ERROR_DUPLICATE_ENTRY';
           }

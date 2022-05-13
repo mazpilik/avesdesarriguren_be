@@ -58,7 +58,7 @@ final class BirdCreatorRepository
 
     public function presenceMonths(iterable $data): void
     {
-        $sql = "INSERT INTO bird_presence_months (bird_id, p_month) VALUES (:bird, :p_month)";
+        $sql = "INSERT INTO bird_month (bird_id, p_month) VALUES (:bird, :p_month)";
         $stmt = $this->pdo->prepare($sql);
         foreach ($data as $row) {
             $stmt->execute($row);

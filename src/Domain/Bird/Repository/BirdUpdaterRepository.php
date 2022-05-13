@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Domain\Family\Repository;
+namespace App\Domain\Bird\Repository;
 
 use PDO;
 
-final class FamilyUpdaterRepository
+final class BirdUpdaterRepository
 {
     private PDO $db;
 
@@ -14,26 +14,85 @@ final class FamilyUpdaterRepository
     }
 
     /**
-     * update order
+     * update bird
      * 
-     * @param array $data
-     * @return Response
+     * @param int $id
+     * @param int $family_id
+     * @param string $name
+     * @return void
      */
-    public function update(int $id, int $order_id, string $name): string
+    public function updateBird(int $id, int $family_id, string $name): void
     {
-      try {
-        $sth = $this->db->prepare('UPDATE family SET order_id = :order_id, name = :name WHERE id = :id');
-        $sth->bindParam('id', $id, PDO::PARAM_INT);
-        $sth->bindParam('order_id', $order_id, PDO::PARAM_INT);
-        $sth->bindParam('name', $name, PDO::PARAM_STR);
-        $sth->execute();
+        $sql = "UPDATE bird SET family_id = :family_id, name = :name WHERE id = :id";
+        $stmt = $this->db->prepare($sql);
+        $stmt->bindParam(':id', $id);
+        $stmt->bindParam(':family_id', $family_id);
+        $stmt->bindParam(':name', $name);
+        $stmt->execute();
+    }
 
-        return 'UPDATE_SUCCESS';
-
-      } catch (PDOException $e) {
-        
-        return 'UPDATE_FAILED';
+    /**
+     * update bird data
+     * 
+     * @param int $id
+     * @param array $additional_data_array
+     * @return void
+     * @throws \Exception
+     * 
+     */
+    public function updateAdditionalData(int $id, iterable $additional_data_array): void
+    {
+      $sql = "UPDATE bird_data 
+      SET 
+      name = :name, 
+      summary = :summary, 
+      bird_length = :bird_length, 
+      wingspan = :wingspan, 
+      identification = :identification,
+      singing = :singing,
+      moving = :moving,
+      habitat = :habitat,
+      feeding = :feeding,
+      reproduction = :reproduction,
+      population = :population,
+      conservation_threats = :conservation_threats,
+      world_distribution = :world_distribution,
+      peninsula_distribution = :peninsula_distribution 
+      WHERE bird_id = :bird_id AND language = :language";
+      $stmt = $this->db->prepare($sql);
       
+      foreach ($additional_data_array as $row) {
+        $stmt->execute($row);
       }
+    }
+
+    /**
+     * delete bird frecuency
+     * 
+     * @param array $frecuencies
+     * 
+     */
+    public function deleteFrecuency(iterable $frecuencies): void
+    {
+        $sql = "DELETE FROM bird_frecuency WHERE bird_id = :bird_id AND frecuency_id = :frecuency_id";
+        $stmt = $this->db->prepare($sql);
+        foreach ($frecuencies as $row) {
+            $stmt->execute($row);
+        }
+    }
+
+    /**
+     * delete bird presence month
+     * 
+     * @param array $presence_months
+     * 
+     */
+    public function deletePresenceMonth(iterable $presence_months): void
+    {
+        $sql = "DELETE FROM bird_month WHERE bird_id = :bird_id AND p_month = :p_month";
+        $stmt = $this->db->prepare($sql);
+        foreach ($presence_months as $row) {
+            $stmt->execute($row);
+        }
     }
 }
