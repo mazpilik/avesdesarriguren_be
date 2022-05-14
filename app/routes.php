@@ -26,6 +26,17 @@ use App\Application\Actions\Order\UpdateOrderAction;
 use App\Application\Actions\ShFileUpload\ShFileUploadAction;
 use App\Application\Actions\User\ListUsersAction;
 use App\Application\Actions\User\ViewUserAction;
+use App\Application\Actions\News\FindNewsSortedAction;
+use App\Application\Actions\News\GetNewsCountAction;
+use App\Application\Actions\News\FindNewsByIdAction;
+use App\Application\Actions\News\CreateNewsAction;
+use App\Application\Actions\News\NewsFileUploadAction;
+use App\Application\Actions\News\UpdateNewsAction;
+use App\Application\Actions\News\DeleteNewsAction;
+use App\Application\Actions\BirdMonth\FindBirdMonthByIdAction;
+use App\Application\Actions\BirdMonth\CreateBirdMonthAction;
+use App\Application\Actions\BirdMonth\UpdateBirdMonthAction;
+use App\Application\Actions\BirdMonth\DeleteBirdMonthAction;
 
 
 use Psr\Http\Message\ResponseInterface as Response;
@@ -104,7 +115,6 @@ return function (App $app) {
 
     // bird routes
     $app->group('/birds', function (Group $group) {
-        // $group->get('/all', ListAllBirdsAction::class);
         $group->get('/sorted/{lang}/{page}/{limit}/{orderby}/{direction}[/{where}]', FindBirdsSortedAction::class);
         $group->get('/number/{lang}[/{where}]', GetBirdsCountAction::class);
         $group->get('/{id}', FindBirdByIdAction::class);
@@ -112,9 +122,27 @@ return function (App $app) {
         $group->post('/{id}', UpdateBirdAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
         $group->delete('/{id}', DeleteBirdAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
     });
+    // news routes
+    $app->group('/news', function (Group $group) {
+        $group->get('/sorted/{lang}/{page}/{limit}/{orderby}/{direction}[/{where}]', FindNewsSortedAction::class);
+        $group->get('/number/{lang}[/{where}]', GetNewsCountAction::class);
+        $group->get('/{id}', FindNewsByIdAction::class);
+        $group->post('', CreateNewsAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+        $group->post('/{id}', UpdateNewsAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+        $group->delete('/{id}', DeleteNewsAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+    });
+    // bird of the month
+    $app->group('/birdmonth', function (Group $group) {
+        $group->get('/{id}', FindBirdMonthByIdAction::class);
+        $group->post('', CreateBirdMonthAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+        $group->post('/{id}', UpdateBirdMonthAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+        $group->delete('/{id}', DeleteBirdMonthAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+    });
 
     // birds images upload
     $app->post('/fileupload/bird/{birdId}', ShFileUploadAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
+    // news images upload
+    $app->post('/fileupload/news/{newsId}', NewsFileUploadAction::class)->add(\PsrJwt\Factory\JwtMiddleware::html(JWT_SECRET, 'jwt', 'Authorization Failed'));
 
     $app->post('/login', function (Request $request, Response $response) {
         //get the user from the request
