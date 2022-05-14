@@ -95,4 +95,18 @@ final class BirdUpdaterRepository
             $stmt->execute($row);
         }
     }
+
+    /**
+     * delete images by bird_id and img
+     * 
+     * @param array $images
+     * @return bool $result
+     */
+    public function deleteImages(iterable $images)
+    {
+        $sth = $this->db->prepare("DELETE FROM bird_img WHERE bird_id = :bird_id AND img = :img");
+        foreach($images as $row) {
+            $sth->execute($row);
+        }
+    }
 }

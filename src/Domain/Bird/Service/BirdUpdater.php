@@ -125,7 +125,45 @@ final class BirdUpdater
             // delete months
             $this->birdUpdaterRepository->deletePresenceMonth($months_to_delete_data);
         }
-        // TODO update images
+        // update images
+        // get images in db
+        $images_db = $this->birdFinderRepository->findImagesByBirdId($id);
+        $images_in_db = [];
+        // conver to plain array
+        foreach ($images_db as $images_db_item) {
+            $images_in_db[] = $images_db_item['img'];
+        }
+
+        // compare with images from request
+        $request_images = $bird_data['images'];
+        $images_to_delete = array_diff($images_in_db, $request_images);
+
+        // if images to delete is not empty
+        // in this case we only look for images that are not in request
+        // because upload goes by other way
+        if(count($images_to_delete) > 0) {
+            $images_to_delete_data = [];
+            foreach($images_to_delete as $image) {
+                $images_to_delete_data[] = [
+                    'bird_id' => $id,
+                    'img' => $image
+                ];
+            }
+
+            // delete images
+            $this->birdUpdaterRepository->deleteImages($images_to_delete_data);
+
+            // remove image from server folder public/images/birds
+            foreach($images_to_delete as $image) {
+                $image_path = './images/birds/' . $image;
+                if(file_exists($image_path)) {
+                    unlink($image_path);
+                }
+            }
+        }
+
+
+        // return success message
         return 'SUCCESS_UPDATED';
 
         

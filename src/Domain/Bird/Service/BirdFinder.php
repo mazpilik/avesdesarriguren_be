@@ -33,7 +33,7 @@ final class BirdFinder
         }
 
         // get months
-        $months = $this->birdFinderRepository->findMonthByBirdId($id);
+        $months = $this->birdFinderRepository->findMonthsByBirdId($id);
         $bird['months'] = [];
         foreach ($months as $value) {
             $bird['months'][] = $value['p_month'];

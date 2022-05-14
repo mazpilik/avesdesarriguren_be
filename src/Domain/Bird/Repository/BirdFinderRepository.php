@@ -183,7 +183,7 @@ final class BirdFinderRepository
      * @param int limit
      * @return array $images
      */
-    public function findImagesByBirdId(int $birdId, int $limit): array
+    public function findImagesByBirdId(int $birdId, int $limit = 0): array
     {
         if($limit > 0){
             $limit = "LIMIT $limit";

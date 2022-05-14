@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Infrastructure\Persistence\Order;
 
-use App\Domain\User\Order;
-use App\Domain\User\OrderNotFoundException;
-use App\Domain\User\OrderRepository;
+use App\Domain\Order\Order;
+use App\Domain\Order\OrderNotFoundException;
+use App\Domain\Order\OrderRepository;
 
 class InDbOrderRepository implements OrderRepository
 {
@@ -16,10 +16,12 @@ class InDbOrderRepository implements OrderRepository
     private array $orders;
 
     /**
-     * @param User[]|null $users
+     * @param Order[]|null $order
      */
-    public function __construct()
+    public function __construct(array $order)
     {
+        $this->id = $order['id'];
+        $this->name = $order['name'];
     }
 
     /**
@@ -27,7 +29,11 @@ class InDbOrderRepository implements OrderRepository
      */
     public function findAll(): array
     {
-        return array_values($this->users);
+        $db = $this->get(PDO::class);
+        $sth = $db->prepare('SELECT * FROM orders');
+        $sth->execute();
+        $orders = $sth->fetchAll(PDO::FETCH_ASSOC);
+        return $orders;
     }
 
     /**
