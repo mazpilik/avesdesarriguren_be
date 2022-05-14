@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Domain\Family\Repository;
+namespace App\Domain\Bird\Repository;
 
 use PDO;
 
-final class FamilyDeleteRepository
+final class BirdDeleteRepository
 {
     private PDO $db;
 
@@ -16,7 +16,7 @@ final class FamilyDeleteRepository
     public function delete(int $id): string
     {
         try {
-            $sth = $this->db->prepare('DELETE FROM family WHERE id = :id');
+            $sth = $this->db->prepare('DELETE FROM bird WHERE id = :id');
             $sth->bindParam('id', $id, PDO::PARAM_INT);
             $sth->execute();
 
