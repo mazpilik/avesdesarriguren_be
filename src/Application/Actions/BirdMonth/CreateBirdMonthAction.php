@@ -24,7 +24,7 @@ final class CreateBirdMonthAction
     {
       try {
         $data = $request->getParsedBody();
-        $birdMonthId = $this->birdMonthCreator->createBirdMonth($data);
+        $birdMonthId = $this->birdMonthCreator->createBirdMonth($data['bird_id'], $data['month'], $data['content']);
         $response->getBody()->write(json_encode($birdMonthId));
         return $response->withStatus(201);
       } catch (\Throwable $th) {
