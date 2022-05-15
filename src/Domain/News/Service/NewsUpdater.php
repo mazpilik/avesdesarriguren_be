@@ -23,7 +23,7 @@ final class NewsUpdater
     public function update(int $id, array $news_data): string
     {
         // update news data
-        $this->newsUpdaterRepository->updateNews($id, $news_data['updatedAt']);
+        $this->newsUpdaterRepository->updateNews($id, date("Y-m-d"));
 
         // update additional data
         $additional_data = [];

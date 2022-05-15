@@ -49,7 +49,7 @@ final class NewsFinderRepository
 
         if(!empty($where)) {
             $where_value = '"%'.$where.'%"';
-            $where_condition = $where_condition." AND name LIKE $where_value";
+            $where_condition = $where_condition." AND title LIKE $where_value OR body LIKE $where_value OR subtitle LIKE $where_value ";
         }
 
         $sql  = "SELECT 
@@ -59,7 +59,7 @@ final class NewsFinderRepository
         news_img.img 
         FROM news_data ndata 
         JOIN news ON (news.id = ndata.news_id) 
-        JOIN news_img ON (news.id = news_img.news_id) 
+        LEFT JOIN news_img ON (news.id = news_img.news_id) 
         $where_condition 
         ORDER BY $orderby $direction 
         LIMIT $limit OFFSET $offset";
@@ -103,11 +103,12 @@ final class NewsFinderRepository
     {
         $sql = "SELECT 
         news.id,
+        news.user_id as userId,
         news.created_at as createdAt,
         news.updated_at as updatedAt,
         nf.img 
         FROM news
-        JOIN news_img nf ON (news.id = nf.news_id)
+        LEFT JOIN news_img nf ON (news.id = nf.news_id)
         WHERE news.id = :id";
 
         $sth = $this->db->prepare($sql);
