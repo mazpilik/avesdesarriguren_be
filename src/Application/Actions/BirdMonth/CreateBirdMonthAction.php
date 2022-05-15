@@ -24,7 +24,11 @@ final class CreateBirdMonthAction
     {
       try {
         $data = $request->getParsedBody();
-        $birdMonthId = $this->birdMonthCreator->createBirdMonth($data['bird_id'], $data['month'], $data['content']);
+        $bird_id = (int) $data['birdId'];
+        $month = (int) $data['month'];
+        $content_es = $data['contentEs'];
+        $content_eus = $data['contentEus'];
+        $birdMonthId = $this->birdMonthCreator->create($bird_id, $month, $content_es, $content_eus);
         $response->getBody()->write(json_encode($birdMonthId));
         return $response->withStatus(201);
       } catch (\Throwable $th) {

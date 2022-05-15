@@ -18,10 +18,15 @@ final class BirdFinderRepository
      */
     public function findAll(): array
     {
-        $sth = $this->db->prepare('SELECT * FROM family');
+        $sql = "SELECT 
+        bird.id,
+        bird.name
+        FROM bird
+        ORDER BY bird.name ASC";
+        $sth = $this->db->prepare($sql);
         $sth->execute();
-        $families = $sth->fetchAll(PDO::FETCH_ASSOC);
-        return $families;
+        $birds = $sth->fetchAll(PDO::FETCH_ASSOC);
+        return $birds;
     }
 
     /**

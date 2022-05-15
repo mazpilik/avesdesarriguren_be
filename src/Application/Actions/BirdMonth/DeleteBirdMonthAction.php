@@ -22,10 +22,9 @@ final class DeleteBirdMonthAction
 
     public function __invoke(Request $request, Response $response, array $args): Response
     {
-        $bird_id =(int) $request->getAttribute('birdId');
-        $month =(int) $request->getAttribute('month');
+        $id = (int) $args['id'];
 
-        $this->birdMonthDeleter->delete($bird_id, $month);
+        $this->birdMonthDeleter->delete($id);
         return $response->withStatus(204);
     }
 }

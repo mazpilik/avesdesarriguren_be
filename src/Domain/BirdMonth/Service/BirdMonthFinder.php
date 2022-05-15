@@ -6,7 +6,7 @@ namespace App\Domain\BirdMonth\Service;
 
 use App\Domain\BirdMonth\Repository\BirdMonthFinderRepository;
 
-final class BirdMonthsFinder
+final class BirdMonthFinder
 {
     private BirdMonthFinderRepository $birdMonthFinderRepository;
 

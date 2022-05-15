@@ -15,12 +15,14 @@ final class BirdMonthUpdateRepository
         $this->pdo = $pdo;
     }
 
-    public function update(int $birdId, int $month, string $content): void
+    public function update($id, int $birdId, int $month, string $content_es, string $content_eus): void
     {
-        $stmt = $this->pdo->prepare('UPDATE bird_month SET content = :content WHERE bird_id = :bird_id AND p_month = :p_month');
+        $stmt = $this->pdo->prepare('UPDATE bird_month SET bird_id = :bird_id, p_month = :p_month, content_es = :content_es, content_eus = :content_eus WHERE id = :id');
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->bindValue(':bird_id', $birdId, PDO::PARAM_INT);
         $stmt->bindValue(':p_month', $month, PDO::PARAM_INT);
-        $stmt->bindValue(':content', $content, PDO::PARAM_STR);
+        $stmt->bindValue(':content_es', $content_es, PDO::PARAM_STR);
+        $stmt->bindValue(':content_eus', $content_eus, PDO::PARAM_STR);
         $stmt->execute();
     }
 }

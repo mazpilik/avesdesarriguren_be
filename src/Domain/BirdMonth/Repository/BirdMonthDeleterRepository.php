@@ -15,11 +15,10 @@ final class BirdMonthDeleterRepository
         $this->pdo = $pdo;
     }
 
-    public function delete(int $birdId, int $month): void
+    public function delete(int $id): void
     {
-        $stmt = $this->pdo->prepare('DELETE FROM bird_month WHERE bird_id = :bird_id AND p_month = :p_month');
-        $stmt->bindValue(':bird_id', $birdId, PDO::PARAM_INT);
-        $stmt->bindValue(':p_month', $month, PDO::PARAM_INT);
+        $stmt = $this->pdo->prepare('DELETE FROM bird_month WHERE id = :id');
+        $stmt->bindValue(':id', $id, PDO::PARAM_INT);
         $stmt->execute();
     }
 }

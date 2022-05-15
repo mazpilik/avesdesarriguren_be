@@ -4,7 +4,7 @@ namespace App\Domain\BirdMonth\Service;
 
 use App\Domain\BirdMonth\Repository\BirdMonthCreatorRepository;
 
-final class BirdMonthsCreator
+final class BirdMonthCreator
 {
     private BirdMonthCreatorRepository $birdMonthCreatorRepository;
 
@@ -13,8 +13,8 @@ final class BirdMonthsCreator
         $this->birdMonthCreatorRepository = $birdMonthCreatorRepository;
     }
 
-    public function create(string $bird_id, int $month, string $content): string
+    public function create(int $bird_id, int $month, string $content_es, string $content_eus): string
     {
-        return $this->birdMonthCreatorRepository->create($bird_id, $month, $content);
+        return $this->birdMonthCreatorRepository->create($bird_id, $month, $content_es, $content_eus);
     }
 }

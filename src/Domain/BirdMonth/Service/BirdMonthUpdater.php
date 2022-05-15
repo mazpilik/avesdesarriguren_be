@@ -15,8 +15,8 @@ final class BirdMonthUpdater
         $this->birdMonthUpdateRepository = $birdMonthUpdateRepository;
     }
 
-    public function update(int $birdId, int $month, string $content): void
+    public function update(int $id, int $birdId, int $month, string $content_es, string $content_eus): void
     {
-        $this->birdMonthUpdateRepository->update($birdId, $month, $content);
+        $this->birdMonthUpdateRepository->update($id, $birdId, $month, $content_es, $content_eus);
     }
 }

@@ -15,8 +15,8 @@ final class BirdMonthDeleter
         $this->birdMonthDeleterRepository = $birdMonthDeleterRepository;
     }
 
-    public function delete(int $birdId, int $month): void
+    public function delete(int $id): void
     {
-        $this->birdMonthDeleterRepository->delete($birdId, $month);
+        $this->birdMonthDeleterRepository->delete($id);
     }
 }
